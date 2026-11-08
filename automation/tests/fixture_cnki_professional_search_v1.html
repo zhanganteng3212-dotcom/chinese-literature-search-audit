@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>专业检索-中国知网测试页</title>
+</head>
+<body>
+  <textarea class="majorSearch"></textarea>
+  <label><input name="onlyChecked" type="checkbox" checked>中英文扩展</label>
+  <label><input name="onlyChecked" type="checkbox" checked>同义词扩展</label>
+  <input class="btn-search" type="button" value="检索">
+
+  <ul>
+    <li><a class="all" href="javascript:void(0)" name="classify" resource="CROSSDB"><span>总库</span><em></em></a></li>
+    <li><span>总库</span><em id="grand-total">0</em></li>
+    <li><a href="javascript:void(0)" name="classify" resource="JOURNAL"><span>学术期刊</span><em>0</em></a></li>
+    <li><a href="javascript:void(0)" name="classify" resource="DISSERTATION"><span>学位论文</span><em>0</em></a></li>
+    <li><a href="javascript:void(0)" name="classify" resource="CONFERENCE"><span>会议</span><em>0</em></a></li>
+  </ul>
+  <div id="countPageDiv">共找到 0 条结果</div>
+  <div class="toolbar-col">全选 已选 <span id="selectCount">0</span> <a href="#">清除</a></div>
+  <div id="gridTable"></div>
+
+  <script>
+    window.islogin = () => true;
+    const counts = { JOURNAL: 13, DISSERTATION: 11, CONFERENCE: 0 };
+    document.querySelector('.btn-search').addEventListener('click', () => {
+      document.querySelector('#grand-total').textContent = '24';
+      for (const [resource, count] of Object.entries(counts)) {
+        document.querySelector(`a[resource="${resource}"] em`).textContent = String(count);
+      }
+      document.querySelector('#countPageDiv').textContent = '共找到 24 条结果';
+    });
+  </script>
+</body>
+</html>

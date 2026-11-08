@@ -1,0 +1,20 @@
+{
+  "name": "chinese-literature-search-audit-automation",
+  "version": "1.1.0-alpha2",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "Optional human-in-the-loop browser automation adapters for the Chinese literature search audit Skill.",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "playwright": "1.62.1"
+  },
+  "scripts": {
+    "test:core": "node tests/test_core_v2.mjs",
+    "test:cnki": "node tests/test_cnki_dry_run_v2.mjs",
+    "test:main": "node tests/test_main_fixture_v2.mjs",
+    "test": "node tests/test_core_v2.mjs && node tests/test_cnki_dry_run_v2.mjs && node tests/test_main_fixture_v2.mjs"
+  }
+}

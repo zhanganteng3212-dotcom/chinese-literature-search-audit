@@ -1,0 +1,31 @@
+RT Journal Article
+T1 示例：针刺干预模型动物体表温度的研究
+A1 张甲
+YR 2024
+JF 示例中医药期刊
+DO 10.0000/demo.001
+AB 这是完全虚构的测试摘要，仅用于验证脚本。
+K1 针刺
+K1 体表温度
+ID CNKI-DEMO-001
+
+RT Journal Article
+T1 示例：中药干预红外热成像指标的实验观察
+A1 李乙
+YR 2023
+JF 示例药理期刊
+AB 这是第二条完全虚构的测试摘要。
+K1 中药
+K1 红外热成像
+ID CNKI-DEMO-002
+
+RT Journal Article
+T1 示例：针刺干预模型动物体表温度的实验研究
+A1 赵丁
+YR 2024
+JF 示例实验期刊
+AB 这是一条与第一条题名高度相似、但不应被自动删除的虚构记录。
+K1 针刺
+K1 体表温度
+ID CNKI-DEMO-003
+

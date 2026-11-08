@@ -1,0 +1,11 @@
+RT Journal Article
+T1 示例：针刺干预模型动物体表温度的研究
+A1 张甲
+YR 2024
+JF 示例中医药期刊
+DO https://doi.org/10.0000/demo.001
+AB 同一虚构文献在另一个数据库中的测试记录。
+K1 针刺
+K1 体表温度
+ID WF-DEMO-001
+

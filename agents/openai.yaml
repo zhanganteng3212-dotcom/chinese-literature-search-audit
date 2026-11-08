@@ -1,0 +1,5 @@
+interface:
+  display_name: "中文文献检索审计"
+  short_description: "可复现地检索、核查、合并和去重中文数据库题录"
+  default_prompt: "使用 $chinese-literature-search-audit 为我的课题建立中文数据库正式检索流程。先复述研究问题、数据库范围和交付物，不要立即检索。"
+

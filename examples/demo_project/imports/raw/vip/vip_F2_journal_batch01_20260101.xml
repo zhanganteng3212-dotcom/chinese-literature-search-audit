@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Root>
+  <PeriodicalPaper>
+    <ID>VIP-DEMO-001</ID>
+    <Titles><Title><Text>示例：经络区域温度分布的图像分析</Text></Title></Titles>
+    <Creators><Creator><Name>王丙</Name></Creator></Creators>
+    <PublishDate>2022</PublishDate>
+    <Periodical><Name>示例针灸研究期刊</Name></Periodical>
+    <Abstracts><Abstract><Text>这是完全虚构的XML测试摘要。</Text></Abstract></Abstracts>
+    <Keywords><Keyword>经络</Keyword><Keyword>温度分布</Keyword></Keywords>
+  </PeriodicalPaper>
+</Root>
+

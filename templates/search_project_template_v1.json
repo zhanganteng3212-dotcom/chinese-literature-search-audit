@@ -1,0 +1,18 @@
+{
+  "project_name": "请填写课题名称",
+  "protocol_version": "v1",
+  "databases": ["CNKI", "WANFANG", "VIP", "SINOMED"],
+  "document_types": ["journal", "dissertation", "conference"],
+  "date_limit": null,
+  "concept_groups": {
+    "A": ["术语1", "术语2"],
+    "B": ["术语3", "术语4"],
+    "C": ["术语5", "术语6"]
+  },
+  "search_families": {
+    "F1": ["A", "B"],
+    "F2": ["A", "C"]
+  },
+  "notes": "各数据库检索式必须单独保存，不能直接复制同一语法。"
+}
+

@@ -1,0 +1,5 @@
+database,search_family,document_type,query_version,search_date,displayed_hits,batch_id,export_file,selected_count,expected_records,status,notes
+CNKI,F1,journal,v1,2026-01-01,3,01,cnki_F1_journal_batch01_20260101.txt,3,3,exported,synthetic demo
+WANFANG,F1,journal,v1,2026-01-01,1,01,wanfang_F1_journal_batch01_20260101.txt,1,1,exported,synthetic demo
+VIP,F2,journal,v1,2026-01-01,1,01,vip_F2_journal_batch01_20260101.xml,1,1,exported,synthetic demo
+

@@ -1,0 +1,33 @@
+# Runtime dependencies
+node_modules/
+
+# Test and language caches
+tests/.tmp/
+__pycache__/
+*.py[cod]
+
+# Browser profiles and authentication state
+browser-profile/
+user-data-dir/
+Default/Cookies
+Default/Login Data
+Default/Web Data
+Default/History
+
+# Local retrieval projects and real exports
+imports/raw/
+outputs/
+logs/
+checkpoints/
+*.crdownload
+
+# Local configuration overrides
+.env
+.env.*
+config/browser_automation.local.json
+
+# Editor and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

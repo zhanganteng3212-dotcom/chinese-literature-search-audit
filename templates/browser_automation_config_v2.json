@@ -1,0 +1,54 @@
+{
+  "version": "1.1.0-alpha2",
+  "state_dir": "logs/browser_automation_v2",
+  "family_ledger": "tables/v2_automation_family_ledger.csv",
+  "batch_ledger": "tables/v1_search_run_ledger.csv",
+  "browser": {
+    "mode": "persistent",
+    "channel": "chrome",
+    "headless": false,
+    "profile_dir": "",
+    "start_url": "",
+    "always_open_start_url": false,
+    "auth_wait_ms": 600000,
+    "action_timeout_ms": 15000,
+    "result_wait_ms": 1200,
+    "action_delay_ms": 500,
+    "download_timeout_ms": 30000,
+    "cdp_endpoint": "http://127.0.0.1:9222"
+  },
+  "databases": {
+    "CNKI": {
+      "adapter": "cnki",
+      "target_url_patterns": ["cnki", "kns8", "kns8s"],
+      "target_title_patterns": ["知网", "CNKI", "高级检索", "专业检索"],
+      "output_dir": "imports/raw/cnki",
+      "export_format": "RefWorks TXT",
+      "batch_limit": 500,
+      "preferred_page_size": 50,
+      "actual_field": "专业检索（SU=主题）",
+      "document_types": "学术期刊/学位论文/会议论文",
+      "synonym_expansion": "关闭中英文扩展及同义词扩展",
+      "resources": [
+        {
+          "id": "JOURNAL",
+          "label": "学术期刊",
+          "document_type": "journal",
+          "refworks_type_pattern": "^Journal Article$"
+        },
+        {
+          "id": "DISSERTATION",
+          "label": "学位论文",
+          "document_type": "dissertation",
+          "refworks_type_pattern": "^Dissertation/Thesis$"
+        },
+        {
+          "id": "CONFERENCE",
+          "label": "会议论文",
+          "document_type": "conference",
+          "refworks_type_pattern": "^Conference Proceeding(?:s)?$"
+        }
+      ]
+    }
+  }
+}
