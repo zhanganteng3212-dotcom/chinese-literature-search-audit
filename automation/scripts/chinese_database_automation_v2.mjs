@@ -233,7 +233,7 @@ async function main() {
     return 0;
   }
   if (!args.project) throw new Error('必须提供 --project <检索项目目录>。');
-  if (args.database !== 'CNKI') throw new Error('1.1.0-alpha2 公开自动化适配器当前只支持 CNKI。');
+  if (args.database !== 'CNKI') throw new Error('1.1.0-alpha3 公开自动化适配器当前只支持 CNKI。');
 
   const projectRoot = path.resolve(args.project);
   const protocolPath = resolveFromProject(projectRoot, args.protocol, 'config/search_project_v1.json');
@@ -262,7 +262,7 @@ async function main() {
   const batchLedgerPath = resolveFromProject(projectRoot, automation.batch_ledger, 'tables/v1_search_run_ledger.csv');
 
   const plan = {
-    version: '1.1.0-alpha2', database: args.database, project_root: projectRoot,
+    version: '1.1.0-alpha3', database: args.database, project_root: projectRoot,
     protocol: protocolPath, automation_config: automationPath, families,
     queries: Object.fromEntries(families.map((family) => [family, queries[family]])),
     output_directory: outputDirectory, checkpoint: checkpointPath,

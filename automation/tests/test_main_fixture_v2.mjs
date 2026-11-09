@@ -22,7 +22,7 @@ try {
     search_families: { F1: ['A', 'B'] },
   };
   const automation = {
-    version: '1.1.0-alpha2',
+    version: '1.1.0-alpha3',
     state_dir: 'logs/browser_automation_v2',
     family_ledger: 'tables/v2_automation_family_ledger.csv',
     batch_ledger: 'tables/v1_search_run_ledger.csv',
@@ -67,6 +67,8 @@ try {
   assert.match(result.stdout, /"status": "completed"/);
   assert.match(result.stdout, /"JOURNAL": 13/);
   assert.match(result.stdout, /"DISSERTATION": 11/);
+  assert.match(result.stdout, /"status": "all_tracked"/);
+  assert.match(result.stdout, /"untracked_total": 0/);
   assert.equal(
     fs.existsSync(path.join(project, 'logs', 'browser_automation_v2', 'state_cnki_v2.json')),
     false,

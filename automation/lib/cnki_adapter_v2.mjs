@@ -157,6 +157,7 @@ export class CnkiAdapter {
     const searchResult = await this.search(query, family);
     familyState.displayed_counts = searchResult.counts;
     familyState.grand_total = searchResult.grandTotal;
+    familyState.scope_audit = searchResult.scopeAudit;
     this.checkpoint.save();
 
     for (const resource of this.databaseConfig.resources) {
@@ -193,7 +194,7 @@ export class CnkiAdapter {
       batch_count: String(batches.length),
       synonym_expansion: this.databaseConfig.synonym_expansion,
       status: 'completed',
-      notes: `自动化验证通过：${notes}；导出记录合计${batches.reduce((sum, batch) => sum + batch.record_count, 0)}；原始文件SHA-256已写入断点文件`,
+      notes: `自动化验证通过：范围内${searchResult.scopeAudit.tracked_total}；范围外${searchResult.scopeAudit.untracked_total}（${searchResult.scopeAudit.excluded_categories.map((item) => `${item.label}${item.count}`).join('、') || '无'}）；${notes}；导出记录合计${batches.reduce((sum, batch) => sum + batch.record_count, 0)}；原始文件SHA-256已写入断点文件`,
     });
     writeLedger(this.ledgerPath, this.ledger);
 
@@ -206,7 +207,7 @@ export class CnkiAdapter {
       batchCount: batches.length,
       files: batches.map((batch) => batch.file_name),
     });
-    return { family, counts: searchResult.counts, batches };
+    return { family, counts: searchResult.counts, grandTotal: searchResult.grandTotal, scopeAudit: searchResult.scopeAudit, batches };
   }
 
   async search(query, family) {
@@ -244,15 +245,29 @@ export class CnkiAdapter {
       error.code = 'RESULT_COUNT_INCONSISTENT';
       throw error;
     }
-    this.logger.info('search_completed', { family, counts, grandTotal });
-    return { counts, grandTotal };
+    const classifierNodes = await this.readClassifierNodes();
+    const scopeAudit = this.evaluateResourceScope(counts, grandTotal, classifierNodes);
+    this.logger.info('resource_scope_evaluated', { family, ...scopeAudit });
+    if (!this.dryRun && scopeAudit.status === 'review_required') {
+      const error = new Error(
+        `${family} 总库${grandTotal}、配置范围内${trackedTotal}，仍有${scopeAudit.untracked_total}条未获显式范围处置；拒绝正式导出。`,
+      );
+      error.code = 'UNTRACKED_RESOURCE_SCOPE_REVIEW_REQUIRED';
+      throw error;
+    }
+    this.logger.info('search_completed', { family, counts, grandTotal, scopeAudit });
+    return { counts, grandTotal, scopeAudit };
   }
 
   async waitForResults() {
     await this.page.waitForFunction(() => {
       const resourceCounts = [...document.querySelectorAll('a[name="classify"][resource] em')]
         .map((item) => item.textContent?.trim() ?? '');
-      return resourceCounts.some((value) => /\d/.test(value));
+      const bodyText = document.body?.innerText ?? '';
+      const explicitNoResult = bodyText.includes('抱歉，暂无数据')
+        || bodyText.includes('未检索到相关结果')
+        || bodyText.includes('未找到相关结果');
+      return resourceCounts.some((value) => /\d/.test(value)) || explicitNoResult;
     }, null, { timeout: 30000 });
     await this.page.waitForTimeout(this.browserConfig.result_wait_ms ?? 1200);
   }
@@ -272,6 +287,63 @@ export class CnkiAdapter {
     }, resourceIds);
   }
 
+  async readClassifierNodes() {
+    return this.page.evaluate(() => {
+      const parseCount = (text) => {
+        const match = String(text ?? '').replaceAll(',', '').match(/\d+/);
+        return match ? Number(match[0]) : null;
+      };
+      return [...document.querySelectorAll('a[name="classify"]')].map((anchor) => {
+        const clone = anchor.cloneNode(true);
+        clone.querySelectorAll('em').forEach((item) => item.remove());
+        return {
+          visible: anchor.offsetParent !== null,
+          resource: anchor.getAttribute('resource') ?? '',
+          label: clone.textContent?.replace(/\s+/g, ' ').trim() ?? '',
+          count: parseCount(anchor.querySelector('em')?.textContent ?? anchor.textContent),
+          raw_text: anchor.textContent?.replace(/\s+/g, ' ').trim() ?? '',
+        };
+      });
+    });
+  }
+
+  evaluateResourceScope(counts, grandTotal, classifierNodes) {
+    const trackedTotal = Object.values(counts).reduce((sum, value) => sum + value, 0);
+    const untrackedTotal = grandTotal - trackedTotal;
+    const policy = this.databaseConfig.untracked_resource_policy ?? { action: 'require_review', approved_labels: [] };
+    const approvedLabels = Array.isArray(policy.approved_labels) ? policy.approved_labels : [];
+    const excludedCategories = [];
+    const missingLabels = [];
+    for (const label of approvedLabels) {
+      const candidates = classifierNodes.filter((item) => item.label === label && Number.isInteger(item.count));
+      if (!candidates.length) {
+        missingLabels.push(label);
+        continue;
+      }
+      const selected = candidates.reduce((best, item) => (item.count > best.count ? item : best));
+      excludedCategories.push({ label, resource: selected.resource, count: selected.count });
+    }
+    const approvedExcludedTotal = excludedCategories.reduce((sum, item) => sum + item.count, 0);
+    let status = 'review_required';
+    if (untrackedTotal === 0) status = 'all_tracked';
+    else if (
+      policy.action === 'exclude_with_audit'
+      && missingLabels.length === 0
+      && approvedExcludedTotal === untrackedTotal
+    ) status = 'approved_exclusion';
+    return {
+      status,
+      tracked_total: trackedTotal,
+      untracked_total: untrackedTotal,
+      approved_excluded_total: approvedExcludedTotal,
+      excluded_categories: excludedCategories,
+      missing_approved_labels: missingLabels,
+      policy_action: policy.action ?? 'require_review',
+      rationale: policy.rationale ?? '',
+      classifier_nodes: classifierNodes,
+    };
+  }
+
   async readGrandTotal() {
     return this.page.evaluate(() => {
       const candidates = [...document.querySelectorAll('a, li')];
@@ -284,7 +356,14 @@ export class CnkiAdapter {
         }
       }
       const matches = [...document.body.innerText.matchAll(/总库\s*([\d,]+)/g)];
-      return matches.length ? Number(matches.at(-1)[1].replaceAll(',', '')) : null;
+      if (matches.length) return Number(matches.at(-1)[1].replaceAll(',', ''));
+      const bodyText = document.body?.innerText ?? '';
+      if (
+        bodyText.includes('抱歉，暂无数据')
+        || bodyText.includes('未检索到相关结果')
+        || bodyText.includes('未找到相关结果')
+      ) return 0;
+      return null;
     });
   }
 
@@ -603,9 +682,59 @@ export class CnkiAdapter {
       error.code = 'EXPORT_BUTTON_NOT_FOUND';
       throw error;
     }
-    const downloadPromise = popup.waitForEvent('download', { timeout: this.browserConfig.download_timeout_ms ?? 30000 });
+    const downloadTimeout = this.browserConfig.download_timeout_ms ?? 30000;
+    const humanWaitTimeout = this.browserConfig.auth_wait_ms ?? 600000;
+    const popupDownloadPromise = popup.waitForEvent('download', { timeout: humanWaitTimeout }).catch(() => null);
+    const parentDownloadPromise = this.page.waitForEvent('download', { timeout: humanWaitTimeout }).catch(() => null);
     await trigger.click();
-    const download = await downloadPromise;
+    let download = await Promise.race([
+      popupDownloadPromise,
+      parentDownloadPromise,
+      sleep(1500).then(() => null),
+    ]);
+
+    const verificationVisible = await popup.evaluate(() => (
+      document.body?.innerText?.includes('拖动下方拼图完成验证')
+      || document.body?.innerText?.includes('安全验证')
+    )).catch(() => false);
+    if (!download && verificationVisible) {
+      this.logger.info('human_verification_required', {
+        message: '知网要求拼图验证。请在导出窗口中人工完成；程序将等待并自动继续。',
+        timeout_ms: humanWaitTimeout,
+        url: popup.url(),
+      });
+      const verificationFinished = popup.waitForFunction(() => {
+        const text = document.body?.innerText ?? '';
+        return !text.includes('拖动下方拼图完成验证') && !text.includes('安全验证');
+      }, null, { timeout: humanWaitTimeout }).then(() => true).catch(() => false);
+      const outcomeAfterHuman = await Promise.race([
+        popupDownloadPromise.then((item) => ({ kind: 'download', item })),
+        parentDownloadPromise.then((item) => ({ kind: 'download', item })),
+        verificationFinished.then((finished) => ({ kind: 'verified', finished })),
+      ]);
+      if (outcomeAfterHuman.kind === 'download' && outcomeAfterHuman.item) {
+        download = outcomeAfterHuman.item;
+      } else if (outcomeAfterHuman.kind === 'verified' && outcomeAfterHuman.finished) {
+        download = await Promise.race([
+          popupDownloadPromise,
+          parentDownloadPromise,
+          sleep(1200).then(() => null),
+        ]);
+        if (!download) {
+          const retryTrigger = popup.locator('a[title="导出题录文件"]:visible, a:has-text("导出"):visible').first();
+          await retryTrigger.waitFor({ state: 'visible', timeout: 5000 });
+          const retryPopupDownload = popup.waitForEvent('download', { timeout: downloadTimeout }).catch(() => null);
+          const retryParentDownload = this.page.waitForEvent('download', { timeout: downloadTimeout }).catch(() => null);
+          await retryTrigger.click();
+          download = await Promise.race([retryPopupDownload, retryParentDownload]);
+        }
+      }
+    }
+    if (!download) {
+      const error = new Error(`DOWNLOAD_NOT_TRIGGERED：导出按钮已点击，但未获得下载事件。URL=${popup.url()}`);
+      error.code = 'DOWNLOAD_NOT_TRIGGERED';
+      throw error;
+    }
     await popup.close().catch(() => {});
     return download;
   }

@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.1.0-alpha3 — 2026-11-09
+
+### Added
+
+- capture all CNKI classifier nodes during each search;
+- separate configured formal document types from untracked CNKI resource categories;
+- require explicit, count-reconciled exclusion policy before a formal export;
+- preserve scoped total, untracked total, category labels and rationale in logs and checkpoints.
+- recognize CNKI zero-result pages as a valid count of zero instead of timing out;
+- detect the CNKI slider-verification prompt during RefWorks export and wait for user completion rather than attempting to bypass it;
+- pass a live authenticated dry-run and a one-record RefWorks export regression on 2026-11-09.
+
 ## 1.1.0-alpha2 — 2026-11-08
 
 ### Fixed

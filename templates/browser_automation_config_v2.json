@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0-alpha2",
+  "version": "1.1.0-alpha3",
   "state_dir": "logs/browser_automation_v2",
   "family_ledger": "tables/v2_automation_family_ledger.csv",
   "batch_ledger": "tables/v1_search_run_ledger.csv",
@@ -29,6 +29,11 @@
       "actual_field": "专业检索（SU=主题）",
       "document_types": "学术期刊/学位论文/会议论文",
       "synonym_expansion": "关闭中英文扩展及同义词扩展",
+      "untracked_resource_policy": {
+        "action": "require_review",
+        "approved_labels": [],
+        "rationale": "首次dry-run后，根据冻结纳入范围显式填写范围外资源类别；不得仅因总库与三类数量不一致而静默忽略。"
+      },
       "resources": [
         {
           "id": "JOURNAL",

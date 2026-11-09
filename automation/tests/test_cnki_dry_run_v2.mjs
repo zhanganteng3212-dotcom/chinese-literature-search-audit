@@ -74,6 +74,9 @@ try {
   const result = await adapter.runFamily('F1', query);
   assert.deepEqual(result.counts, { JOURNAL: 13, DISSERTATION: 11, CONFERENCE: 0 });
   assert.equal(result.grandTotal, 24);
+  assert.equal(result.scopeAudit.status, 'all_tracked');
+  assert.equal(result.scopeAudit.tracked_total, 24);
+  assert.equal(result.scopeAudit.untracked_total, 0);
   assert.equal(await page.locator('textarea.majorSearch').inputValue(), query);
   assert.deepEqual(
     await page.locator('input[name="onlyChecked"]').evaluateAll((items) => items.map((item) => item.checked)),
@@ -81,6 +84,19 @@ try {
   );
   assert.equal(fs.existsSync(path.join(temporary, 'batch.csv')), false, 'dry-run must not create export batch ledger rows');
   assert.equal(fs.existsSync(path.join(temporary, 'state.json')), false, 'dry-run must not mutate the formal checkpoint');
+
+  await page.setContent(`
+    <html><body>
+      <a class="all" name="classify" resource="CROSSDB"><span>总库</span></a>
+      <a name="classify" resource="JOURNAL">学术期刊</a>
+      <a name="classify" resource="DISSERTATION">学位论文</a>
+      <a name="classify" resource="CONFERENCE">会议</a>
+      <div>抱歉，暂无数据，请稍后重试。</div>
+    </body></html>
+  `);
+  await adapter.waitForResults();
+  assert.equal(await adapter.readGrandTotal(), 0);
+  assert.deepEqual(await adapter.readResourceCounts(), { JOURNAL: 0, DISSERTATION: 0, CONFERENCE: 0 });
   process.stdout.write('PASS test_cnki_dry_run_v2\n');
 } finally {
   await browser.close();
