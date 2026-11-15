@@ -10,7 +10,7 @@ It does not request or store passwords and does not bypass access controls.
 
 | Database | Public adapter status | Permitted claim |
 |---|---|---|
-| CNKI | `1.1.0-alpha3`; offline fixtures, 2026-11-09 authenticated live dry-run, zero-result regression and one-record RefWorks export regression passed | browser-assisted candidate; each new protocol still requires dry-run and explicit resource-scope policy before formal retrieval |
+| CNKI | `1.1.0-alpha3`; offline fixtures, 2026-11-09 one-record regression, and 2026-11-15 28-record/four-batch authenticated live validation passed | browser-assisted candidate; each new protocol still requires dry-run and explicit resource-scope policy before formal retrieval |
 | Wanfang | migration pending | use manual authenticated export plus local audit |
 | VIP | migration pending; previous project adapter contains project-specific splitting rules | use manual authenticated export plus local audit |
 | SinoMed | no public browser adapter | use manual authenticated export plus local audit |
