@@ -52,3 +52,4 @@
 - the public CNKI adapter still requires a live regression on the current authenticated website before formal retrieval;
 - Wanfang, VIP and SinoMed browser adapters are not included in this release;
 - login, institutional authentication, CAPTCHA and abnormal-access prompts remain user actions.
+

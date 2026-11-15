@@ -108,3 +108,4 @@ Stop without repeated retries when any of these occurs:
 - the database denies a page, batch, or document type.
 
 Preserve the log and checkpoint. A stopped run is `partial`, `pending`, or `failed` according to the evidence; it is not silently converted to `completed`.
+
