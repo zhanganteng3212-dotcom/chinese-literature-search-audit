@@ -2,6 +2,14 @@
 
 ## 1.1.0-alpha3 — 2026-11-09
 
+### Live validation update — 2026-11-15
+
+- completed a 28-record authenticated CNKI live validation without changing the released code;
+- exported 17 journal records and 11 dissertations in four batches (10, 7, 10 and 1);
+- reconciled displayed hits, selected rows, exported records and title counts at 28/28;
+- verified tail-batch handling, selection clearing, zero-result skipping, checkpoints, ledgers and SHA-256 recording;
+- kept the test corpus separate from formal retrieval data and did not publish real bibliographic records.
+
 ### Added
 
 - capture all CNKI classifier nodes during each search;
@@ -44,3 +52,4 @@
 - the public CNKI adapter still requires a live regression on the current authenticated website before formal retrieval;
 - Wanfang, VIP and SinoMed browser adapters are not included in this release;
 - login, institutional authentication, CAPTCHA and abnormal-access prompts remain user actions.
+
