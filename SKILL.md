@@ -34,7 +34,7 @@ Read [quick-start.md](references/quick-start.md) when setting up a new project. 
 
 The stable workflow is manual authenticated search/export plus automated local audit and deduplication. Browser automation is optional and should be treated as an adapter requiring live regression testing.
 
-Version `1.1.0-alpha3` adds a public CNKI browser-assisted candidate. It launches a dedicated visible Chrome profile; the user completes authentication and CAPTCHA, then the adapter performs the frozen query, classification, batch export, checkpointing and count validation. It audits the difference between the CNKI grand total and configured formal document types; a formal export stops unless every untracked category is explicitly reviewed and reconciled. Wanfang, VIP and SinoMed remain on the stable manual-export path until their public adapters pass separate live regression.
+Version `1.1.0-alpha4` provides a public CNKI browser-assisted candidate. It launches a dedicated visible Chrome profile; the user completes authentication and CAPTCHA, then the adapter performs the frozen query, classification, batch export, checkpointing and count validation. It audits the difference between the CNKI grand total and configured formal document types; a formal export stops unless every untracked category is explicitly reviewed and reconciled. It can also pause after a requested number of newly validated batches and resume the same project from the first unvalidated record. Wanfang, VIP and SinoMed remain on the stable manual-export path until their public adapters pass separate live regression.
 
 Initialize a project with:
 

@@ -6,11 +6,13 @@ The optional automation layer controls a dedicated visible Chrome profile after 
 
 It does not request or store passwords and does not bypass access controls.
 
+For a controlled segmented run, pass `--stop-after-new-batches N`. The adapter pauses only after the new batch has passed RefWorks validation and its file hash, checkpoint and batch-ledger row have been saved. Run the same project again without this option to continue from the first unvalidated record. Do not use `--force` or delete the checkpoint to simulate a resume.
+
 ## Adapter status
 
 | Database | Public adapter status | Permitted claim |
 |---|---|---|
-| CNKI | `1.1.0-alpha3`; offline fixtures, 2026-11-09 one-record regression, and 2026-11-15 28-record/four-batch authenticated live validation passed | browser-assisted candidate; each new protocol still requires dry-run and explicit resource-scope policy before formal retrieval |
+| CNKI | `1.1.0-alpha4`; offline fixtures, 2026-11-09 one-record regression, 2026-11-15 28-record/four-batch live validation, and controlled pause/resume live validation passed | browser-assisted candidate; each new protocol still requires dry-run and explicit resource-scope policy before formal retrieval |
 | Wanfang | migration pending | use manual authenticated export plus local audit |
 | VIP | migration pending; previous project adapter contains project-specific splitting rules | use manual authenticated export plus local audit |
 | SinoMed | no public browser adapter | use manual authenticated export plus local audit |

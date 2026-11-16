@@ -38,6 +38,8 @@ function usage() {
   --automation-config 文件 默认 config/browser_automation_v2.json
   --target-url 正则        多个候选标签页时指定目标URL
   --start-url URL          启动浏览器后打开指定入口；建议填写学校图书馆入口
+  --stop-after-new-batches N
+                           每完成并落盘N个新批次后安全暂停；用于分段运行和断点续跑验证
   --dry-run                只执行检索与分类计数，不导出
   --list-tabs              只列出自动化浏览器中的标签页
   --validate-config        只验证配置并输出检索计划，不打开浏览器
@@ -53,6 +55,7 @@ function parseArgs(argv) {
   const output = {
     project: '', database: 'CNKI', families: 'pending', protocol: '', automationConfig: '',
     targetUrl: '', startUrl: '', dryRun: false, listTabs: false, validateConfig: false,
+    stopAfterNewBatches: 0,
   };
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
@@ -67,6 +70,13 @@ function parseArgs(argv) {
     else if (argument === '--automation-config') output.automationConfig = argv[++index];
     else if (argument === '--target-url') output.targetUrl = argv[++index];
     else if (argument === '--start-url') output.startUrl = argv[++index];
+    else if (argument === '--stop-after-new-batches') {
+      const value = Number(argv[++index]);
+      if (!Number.isInteger(value) || value <= 0) {
+        throw new Error('--stop-after-new-batches 必须是正整数。');
+      }
+      output.stopAfterNewBatches = value;
+    }
     else throw new Error(`未知参数：${argument}`);
   }
   return output;
@@ -233,7 +243,7 @@ async function main() {
     return 0;
   }
   if (!args.project) throw new Error('必须提供 --project <检索项目目录>。');
-  if (args.database !== 'CNKI') throw new Error('1.1.0-alpha3 公开自动化适配器当前只支持 CNKI。');
+  if (args.database !== 'CNKI') throw new Error('1.1.0-alpha4 公开自动化适配器当前只支持 CNKI。');
 
   const projectRoot = path.resolve(args.project);
   const protocolPath = resolveFromProject(projectRoot, args.protocol, 'config/search_project_v1.json');
@@ -262,12 +272,13 @@ async function main() {
   const batchLedgerPath = resolveFromProject(projectRoot, automation.batch_ledger, 'tables/v1_search_run_ledger.csv');
 
   const plan = {
-    version: '1.1.0-alpha3', database: args.database, project_root: projectRoot,
+    version: '1.1.0-alpha4', database: args.database, project_root: projectRoot,
     protocol: protocolPath, automation_config: automationPath, families,
     queries: Object.fromEntries(families.map((family) => [family, queries[family]])),
     output_directory: outputDirectory, checkpoint: checkpointPath,
     family_ledger: familyLedgerPath, batch_ledger: batchLedgerPath,
     browser_mode: automation.browser?.mode ?? 'persistent',
+    stop_after_new_batches: args.stopAfterNewBatches,
   };
   if (args.validateConfig) {
     process.stdout.write(`${JSON.stringify({ status: 'config_valid', ...plan }, null, 2)}\n`);
@@ -316,12 +327,27 @@ async function main() {
       batchLedgerPath,
       queryVersion: protocol.protocol_version ?? protocol.version ?? 'v1',
       dryRun: args.dryRun,
+      stopAfterNewBatches: args.stopAfterNewBatches,
     });
     candidate.page.setDefaultTimeout(Number(automation.browser?.action_timeout_ms ?? 15000));
     await candidate.page.bringToFront();
     await adapter.preflight();
     const results = [];
-    for (const family of families) results.push(await adapter.runFamily(family, queries[family]));
+    try {
+      for (const family of families) results.push(await adapter.runFamily(family, queries[family]));
+    } catch (error) {
+      if (error.code === 'CONTROLLED_PAUSE_AFTER_BATCH') {
+        logger.info('run_paused', { reason: error.code, details: error.details ?? {} });
+        process.stdout.write(`${JSON.stringify({
+          status: 'paused',
+          reason: error.code,
+          pause: error.details ?? {},
+          ...plan,
+        }, null, 2)}\n`);
+        return 0;
+      }
+      throw error;
+    }
     logger.info('run_completed', { database: args.database, families, dry_run: args.dryRun });
     process.stdout.write(`${JSON.stringify({ status: 'completed', ...plan, results }, null, 2)}\n`);
     return 0;

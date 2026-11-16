@@ -74,6 +74,7 @@ export class CnkiAdapter {
     batchLedgerPath,
     queryVersion = 'v1',
     dryRun = false,
+    stopAfterNewBatches = 0,
   }) {
     this.page = page;
     this.context = context;
@@ -87,6 +88,8 @@ export class CnkiAdapter {
     this.batchLedgerPath = batchLedgerPath;
     this.queryVersion = queryVersion;
     this.dryRun = dryRun;
+    this.stopAfterNewBatches = stopAfterNewBatches;
+    this.newBatchesCompleted = 0;
   }
 
   async ensureProfessionalSearchVisible() {
@@ -403,8 +406,7 @@ export class CnkiAdapter {
       if (itemCount === 0) {
         throw new Error(`${family}/${resource.id} 第${pageNumber}页没有记录，但仍有 ${expectedCount - globalSeen} 条未处理。`);
       }
-      let cursor = Math.max(0, validatedCount - globalSeen);
-      if (cursor > itemCount) cursor = itemCount;
+      let cursor = resumeCursor(validatedCount, globalSeen, itemCount);
       while (cursor < itemCount && globalSeen + cursor < expectedCount) {
         const selectedBefore = await this.readSelectedCount();
         const capacity = batchLimit - selectedBefore;
@@ -609,6 +611,27 @@ export class CnkiAdapter {
       });
     }
     this.logger.info('export_validated', { family, resource: resource.id, ...batch });
+    this.newBatchesCompleted += 1;
+    if (this.stopAfterNewBatches > 0 && this.newBatchesCompleted >= this.stopAfterNewBatches) {
+      const pauseDetails = {
+        family,
+        resource: resource.id,
+        batch_number: batch.batch_number,
+        new_batches_completed: this.newBatchesCompleted,
+        stop_after_new_batches: this.stopAfterNewBatches,
+        file_name: batch.file_name,
+        sha256: batch.sha256,
+      };
+      this.checkpoint.state.last_controlled_pause = { ...pauseDetails, paused_at: nowIso() };
+      this.checkpoint.save();
+      this.logger.info('controlled_pause_after_batch', pauseDetails);
+      const error = new Error(
+        `已按要求在第 ${this.newBatchesCompleted} 个新批次完成校验并写入断点后暂停。`,
+      );
+      error.code = 'CONTROLLED_PAUSE_AFTER_BATCH';
+      error.details = pauseDetails;
+      throw error;
+    }
     return batch;
   }
 
@@ -738,4 +761,14 @@ export class CnkiAdapter {
     await popup.close().catch(() => {});
     return download;
   }
+}
+
+export function resumeCursor(validatedCount, globalSeen, itemCount) {
+  if (![validatedCount, globalSeen, itemCount].every(Number.isInteger)) {
+    throw new Error('断点游标参数必须是整数。');
+  }
+  if (validatedCount < 0 || globalSeen < 0 || itemCount < 0) {
+    throw new Error('断点游标参数不得为负数。');
+  }
+  return Math.min(itemCount, Math.max(0, validatedCount - globalSeen));
 }

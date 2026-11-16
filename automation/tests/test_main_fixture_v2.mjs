@@ -22,7 +22,7 @@ try {
     search_families: { F1: ['A', 'B'] },
   };
   const automation = {
-    version: '1.1.0-alpha3',
+    version: '1.1.0-alpha4',
     state_dir: 'logs/browser_automation_v2',
     family_ledger: 'tables/v2_automation_family_ledger.csv',
     batch_ledger: 'tables/v1_search_run_ledger.csv',

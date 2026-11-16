@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.1.0-alpha4 — 2026-11-16
+
+### Added
+
+- add `--stop-after-new-batches N` to pause only after a new batch has been exported, parsed, hashed, added to the batch ledger and saved in the checkpoint;
+- write a `last_controlled_pause` audit object to the checkpoint;
+- return a machine-readable `paused` status with exit code 0 for intentional segmentation;
+- reuse the existing checkpoint cursor to skip already validated records on the next run.
+
+### Validation status
+
+- offline controlled-pause, checkpoint persistence and resume-cursor tests passed;
+- a 2026-11-15 authenticated live run paused after the first 10-record journal batch and resumed the remaining 7 journal plus 11 dissertation records;
+- the final 28 records contained 28 exact unique titles and matched the earlier uninterrupted 28-record title set with zero differences;
+- the controlled pause returned exit code 0 only after the validated batch, SHA-256, checkpoint and batch ledger had been persisted;
+- the resumed run skipped the already validated batch and completed without changing the formal research corpus.
+
 ## 1.1.0-alpha3 — 2026-11-09
 
 ### Live validation update — 2026-11-15
